@@ -1,1 +1,1 @@
-# Mern With AI and TS
+# My Project Nextjs
