@@ -14,10 +14,12 @@ export async function generateStaticParams() {
 
 const DestinationDescription = async ({ params }: { params: Promise<{ slug: string }> }) => {
     const { slug } = await params;
-
+    console.log("slug:",slug);
+    
     await connectDB();
     const destination = await PlacesDao.findOne({ slug, isActive: true }).lean() as any;
-
+    console.log("destn :",destination);
+    
     if (!destination) {
         notFound();
     }

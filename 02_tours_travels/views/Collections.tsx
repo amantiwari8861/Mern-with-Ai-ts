@@ -25,14 +25,15 @@ const PlaceCard = ({ place }: { place: TouristPlace }) => {
   const { name, city, state, image, slug } = place;
 
   return (
-    <Link href={`destination/${slug}`}>
+    <Link href={`destinations/${slug}`}>
       <div className="group relative overflow-hidden rounded-2xl transition-shadow hover:shadow-xl">
         <Image
           src={image}
           alt={name}
           className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
-          height={250}
-          width={250}
+          height={600}
+          width={600}
+          loading="eager"
         />
         <div className="glassmorphism absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
         <span className="absolute bottom-0 left-0 text-white p-6 text-xl">

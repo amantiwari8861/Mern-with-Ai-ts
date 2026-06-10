@@ -2,7 +2,7 @@ export const useAuthService = () => {
   const register = async (formData: User) => {
     try {
       // Use relative URL to avoid CORS/redirect issues between www and non-www
-      const response = await fetch(`/api/v1/users`, {
+      const response = await fetch(`/api/v1/users`, { // https://iamandroid.in/api/v1/users
         method: "POST",
         headers: {
           "Content-Type": "application/json",
