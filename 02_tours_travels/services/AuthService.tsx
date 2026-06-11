@@ -1,6 +1,17 @@
 export const useAuthService = () => {
   const register = async (formData: User) => {
     try {
+
+      const userResponse = await fetch(`/api/v1/users?email=${formData.email}`)
+        .then(res => res.json())
+        .then(data => data);
+
+        console.log("user response ",userResponse);
+        
+      if (userResponse.status) {
+        return {...userResponse, message: "User with this email already exists!",status: false};
+      }
+
       // Use relative URL to avoid CORS/redirect issues between www and non-www
       const response = await fetch(`/api/v1/users`, { // https://iamandroid.in/api/v1/users
         method: "POST",
@@ -39,16 +50,17 @@ export const useAuthService = () => {
         body: JSON.stringify(credentials),
       });
 
-      const data = await response.json();
+      const loginResponse = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      console.log("Login response:", loginResponse);
+      if (!loginResponse.status) {
+        throw new Error(loginResponse.message || "Login failed");
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // localStorage.setItem("token", loginResponse.token);
+      // localStorage.setItem("user", JSON.stringify(loginResponse.data));
 
-      return data.user;
+      return loginResponse.data;
     } catch (error) {
       console.error("Login error:", error);
       throw error;

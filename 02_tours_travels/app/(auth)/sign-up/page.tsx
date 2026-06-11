@@ -44,7 +44,7 @@ export default function SignupPage() {
       else
       {
         toast.error(res.message || "Registration failed");
-        reset();
+        // reset();
       }
     } catch (error) {
       toast.error("Registration failed");
