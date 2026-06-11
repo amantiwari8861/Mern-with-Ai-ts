@@ -1,22 +1,34 @@
 import { MapPin, Star, Clock, Plane } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import AddPackageBtn from "./AddPackageBtn";
-import { connectDB } from "@/backend/config/mongoose.config";
-import PlacesDao from "@/backend/model/places.model";
+import {
+    getActiveSlugs,
+    getPlaceBySlug,
+} from "@/backend/services/places.service";
 
-// Generate static paths for all active destinations at build time.
+// Prerender a page per active destination at build time (resilient: returns
+// no params when the DB is unavailable, so pages render on demand instead).
 export async function generateStaticParams() {
-    await connectDB();
-    const places = await PlacesDao.find({ isActive: true }, { slug: 1, _id: 0 }).lean();
-    return places.map((place: any) => ({ slug: place.slug }));
+    const slugs = await getActiveSlugs();
+    return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+    const { slug } = await params;
+    const destination = await getPlaceBySlug(slug);
+    if (!destination) return { title: "Destination not found" };
+    return { title: destination.name, description: destination.description };
 }
 
 const DestinationDescription = async ({ params }: { params: Promise<{ slug: string }> }) => {
     const { slug } = await params;
-
-    await connectDB();
-    const destination = await PlacesDao.findOne({ slug, isActive: true }).lean() as any;
+    const destination = await getPlaceBySlug(slug);
 
     if (!destination) {
         notFound();
@@ -50,7 +62,7 @@ const DestinationDescription = async ({ params }: { params: Promise<{ slug: stri
                     <div className="flex items-center gap-6 text-lg">
                         <span className="flex items-center gap-2">
                             <Star className="fill-yellow-400 text-yellow-400" size={20} />
-                            4.9 Rating
+                            {destination.rating || destination.averageRating || 4.5} Rating
                         </span>
 
                         <span className="flex items-center gap-2">
@@ -103,7 +115,7 @@ const DestinationDescription = async ({ params }: { params: Promise<{ slug: stri
                         <p className="text-gray-500 mb-2">Starting From</p>
 
                         <h2 className="text-5xl font-extrabold text-sky-600 mb-6">
-                            ₹{destination.price}
+                            ₹{destination.price?.toLocaleString("en-IN")}
                         </h2>
 
                         <div className="space-y-4 mb-8">

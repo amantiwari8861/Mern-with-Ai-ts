@@ -1,58 +1,35 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthService } from "@/services/AuthService";
-
-const schema = z
-  .object({
-    name: z.string().min(3, "Name must be at least 3 characters long"),
-    email: z.email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters long"),
-    confirmPassword: z
-      .string()
-      .min(6, "Confirm password must be at least 6 characters long"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+import useAuth from "@/hooks/useAuth";
+import { signUpSchema, type SignUpInput } from "@/schemas/auth.schema";
 
 export default function SignupPage() {
-  const { register: authRegister } = useAuthService();
+  const { register: authRegister } = useAuth();
   const navigate = useRouter();
   const {
     register,
     handleSubmit,
-    watch,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
-  } = useForm({ resolver: zodResolver(schema) });
+  } = useForm<SignUpInput>({ resolver: zodResolver(signUpSchema) });
 
-  const submitHandler = async (formData: User) => {
+  const submitHandler = async (formData: SignUpInput) => {
     try {
-      console.log("form submitted :", formData);
-      const res = await authRegister(formData);
-      if (res.status)
-      {
-        toast.success(res.message || "Registration successful");
-        navigate.push("/sign-in");
-      }
-      else
-      {
-        toast.error(res.message || "Registration failed");
-        reset();
-      }
+      await authRegister(formData);
+      toast.success("Registration successful");
+      navigate.push("/sign-in");
     } catch (error) {
-      toast.error("Registration failed");
-      console.log(error);
+      toast.error(
+        error instanceof Error ? error.message : "Registration failed"
+      );
+      reset();
     }
   };
-
-  // console.log("watch confirmPassword :", watch("confirmPassword"));
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center px-4 py-10">
@@ -172,9 +149,10 @@ export default function SignupPage() {
             {/* Button */}
             <button
               type="submit"
-              className="w-full rounded-xl bg-linear-to-r from-violet-500 via-indigo-500 to-cyan-500 py-3 font-semibold text-white shadow-lg hover:scale-[1.02] hover:shadow-cyan-500/30 transition-all duration-300"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-linear-to-r from-violet-500 via-indigo-500 to-cyan-500 py-3 font-semibold text-white shadow-lg hover:scale-[1.02] hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              Create Account
+              {isSubmitting ? "Creating Account…" : "Create Account"}
             </button>
 
             {/* Divider */}
@@ -210,12 +188,12 @@ export default function SignupPage() {
             {/* Login */}
             <p className="text-center text-sm text-gray-400 pt-2">
               Already have an account?{" "}
-              <a
-                href="#"
+              <Link
+                href="/sign-in"
                 className="text-cyan-400 hover:text-cyan-300 hover:underline"
               >
                 Login
-              </a>
+              </Link>
             </p>
           </form>
         </div>

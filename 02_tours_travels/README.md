@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sukh Travels 🧭
 
-## Getting Started
+A production-ready tours & travel booking app built with **Next.js 16** (App
+Router, React 19), **MongoDB/Mongoose**, **Redux Toolkit**, **Tailwind CSS v4**
+and cookie-based JWT auth.
 
-First, run the development server:
+## Features
+
+- 🔐 **Real authentication** — bcrypt password hashing, JWT in an httpOnly
+  cookie, Edge middleware route protection, server-side Zod validation.
+- 🗺️ **Destinations** — server-rendered listings, per-destination detail pages
+  with `generateStaticParams`, filtering by region (Indian Escapes / Global
+  Journeys).
+- 🛒 **Cart** — Redux Toolkit slice with add / remove / clear and totals.
+- 🎛️ **3D UI** — cursor-reactive tilt cards and a rotating 3D destination ring
+  (pure CSS + Motion, no WebGL).
+- 🛡️ **Hardened** — security headers, resilient DB layer (won't crash a build
+  when the DB is offline), consistent API envelope, no client-leaking errors.
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in MONGODB_URI and JWT_SECRET
+npm run seed                 # load sample destinations (needs MONGODB_URI)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See [.env.example](.env.example). Required: `MONGODB_URI`, `JWT_SECRET`.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Script              | Description                              |
+| ------------------- | ---------------------------------------- |
+| `npm run dev`       | Start the dev server (Turbopack).        |
+| `npm run build`     | Production build.                        |
+| `npm run start`     | Run the production build.                |
+| `npm run lint`      | ESLint.                                  |
+| `npm run typecheck` | `tsc --noEmit` type check.               |
+| `npm run seed`      | Upsert sample destinations into MongoDB. |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/                 App Router routes, layouts, API (app/api/v1/*)
+  (auth)/            sign-in, sign-up
+  (user)/            destinations, collections, cart, dashboard, settings, …
+backend/
+  config/            mongoose connection (cached, fail-fast)
+  data/              seed dataset
+  model/             Mongoose schemas
+  services/          DB access (resilient reads + user create/auth)
+components/          UI + components/three-d/* (TiltCard, Hero3DCarousel)
+context/ hooks/      Auth context + useAuth
+lib/                 env, password (bcrypt), jwt (jose), session, api helpers
+redux/               store + cart slice
+schemas/             shared Zod schemas (client + server)
+middleware.ts        Edge auth guard
+```
 
-## Deploy on Vercel
+## Auth flow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Register** → `POST /api/v1/users` (Zod-validated, bcrypt-hashed, `role`
+   forced server-side).
+2. **Login** → `POST /api/v1/auth/login` verifies the hash and sets an httpOnly
+   `auth_token` cookie.
+3. **Session** → `GET /api/v1/auth/me` reads the cookie; `middleware.ts` guards
+   `/dashboard` and `/settings`.
+4. **Logout** → `POST /api/v1/auth/logout` clears the cookie.

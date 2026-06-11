@@ -52,3 +52,57 @@ body {
     color: white;
   }
 }
+
+/* ---- 3D helpers ---------------------------------------------------------- */
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+}
+
+/* Rotating 3D ring used by Hero3DCarousel */
+.three-d-stage {
+  perspective: 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.three-d-ring {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: spin-3d 26s linear infinite;
+}
+
+.three-d-stage:hover .three-d-ring {
+  animation-play-state: paused;
+}
+
+.three-d-panel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes spin-3d {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .three-d-ring {
+    animation: none;
+  }
+}

@@ -1,44 +1,42 @@
 "use client";
 import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
+import { signInSchema, type SignInInput } from "@/schemas/auth.schema";
 
-const initFormData = { email: "", password: "" };
 const Login = () => {
   const navigate = useRouter();
-  const [formData, setFormData] = useState(initFormData);
-
   const { login: authLogin } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignInInput>({ resolver: zodResolver(signInSchema) });
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    console.log(name, value);
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const submitHandler: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+  const submitHandler = async (data: SignInInput) => {
     try {
-      const res = await authLogin(formData.email, formData.password);
-      console.log("Login res:", res);
-      if (res === true) {
-        toast.success(`Login successful!`);
-        navigate.push("/");
-      }
+      await authLogin(data.email, data.password);
+      toast.success("Login successful!");
+      // Honour ?redirect=… set by middleware for protected routes.
+      const redirect =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("redirect")
+          : null;
+      navigate.push(redirect || "/");
     } catch (err) {
-      console.log("Login catch :", err);
-      toast.error("Invalid credentials");
+      toast.error(err instanceof Error ? err.message : "Invalid credentials");
     }
-    setFormData(initFormData);
   };
 
   return (
     <div className="w-full mt-10">
-      <div className="w-1/2 mx-auto max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
-        <form className="space-y-6" onSubmit={submitHandler}>
+      <div className="w-full mx-auto max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
+        <form className="space-y-6" onSubmit={handleSubmit(submitHandler)}>
           <h5 className="text-xl font-medium text-gray-900 dark:text-white">
-            Sign in to our platform
+            Sign in to Sukh Travels
           </h5>
           <div>
             <label
@@ -49,13 +47,14 @@ const Login = () => {
             </label>
             <input
               type="email"
-              name="email"
               id="email"
-              value={formData.email}
-              onChange={handleFormChange}
+              {...register("email")}
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
               placeholder="name@company.com"
             />
+            {errors.email && (
+              <p className="mt-2 text-sm text-red-500">{errors.email.message}</p>
+            )}
           </div>
           <div>
             <label
@@ -66,13 +65,16 @@ const Login = () => {
             </label>
             <input
               type="password"
-              name="password"
               id="password"
               placeholder="••••••••"
-              value={formData.password}
-              onChange={handleFormChange}
+              {...register("password")}
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
             />
+            {errors.password && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.password.message}
+              </p>
+            )}
           </div>
           <div className="flex items-start">
             <div className="flex items-start">
@@ -80,7 +82,6 @@ const Login = () => {
                 <input
                   id="remember"
                   type="checkbox"
-                  defaultValue=""
                   className="w-4 h-4 border border-gray-300 rounded-sm bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800"
                 />
               </div>
@@ -100,18 +101,19 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            disabled={isSubmitting}
+            className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Login to your account
+            {isSubmitting ? "Signing in…" : "Login to your account"}
           </button>
           <div className="text-sm font-medium text-gray-500 dark:text-gray-300">
             Not registered?{" "}
-            <a
-              href="#"
+            <Link
+              href="/sign-up"
               className="text-blue-700 hover:underline dark:text-blue-500"
             >
               Create account
-            </a>
+            </Link>
           </div>
         </form>
       </div>

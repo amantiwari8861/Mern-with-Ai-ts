@@ -147,8 +147,25 @@ const UserMenu = () => {
             </div>
             <ul className="py-2" aria-labelledby="user-menu-button">
               <li>
-                <Link href="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                <Link
+                  href="/dashboard"
+                  className={`block px-4 py-2 text-sm ${pathname === "/dashboard"
+                    ? "bg-gray-200 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                >
                   Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/cart"
+                  className={`block px-4 py-2 text-sm ${pathname === "/cart"
+                    ? "bg-gray-200 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                >
+                  My Cart
                 </Link>
               </li>
               <li>
@@ -163,24 +180,13 @@ const UserMenu = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/earnings"
-                  className={`block px-4 py-2 text-sm ${pathname === "/earnings"
-                    ? "bg-gray-200 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                >
-                  Earnings
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                <button
+                  type="button"
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                   onClick={handleLogout}
                 >
                   Sign out
-                </Link>
+                </button>
               </li>
             </ul>
           </motion.div>

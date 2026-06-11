@@ -1,35 +1,69 @@
-'use client';
-import { AuthContextType } from "@/types/allTypes";
-import { createContext, useState } from "react";
-// import useAuthService from "../services/AuthService";
+"use client";
+import { AuthContextType, RegisterInput, User } from "@/types/allTypes";
+import { createContext, useEffect, useState } from "react";
+import { useAuthService } from "@/services/AuthService";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const AuthContextWrapper = ({ children }: { children: React.ReactNode }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [userPrinciple, setUserPrinciple] = useState<User | null>(null);
-  // const { login: apiLogin } = useAuthService();
+// Deterministic fallback avatar (initials) when the user has no image.
+function withAvatar(user: User): User {
+  if (user.userImage) return user;
+  const name = encodeURIComponent(user.name || user.email || "User");
+  return {
+    ...user,
+    userImage: `https://ui-avatars.com/api/?name=${name}&background=002366&color=fff&bold=true`,
+  };
+}
 
-  const login: (email: string, password: string) => Promise<boolean> = async (email: string, password: string) => {
-    // const user = await apiLogin({ email, password });
-    setUserPrinciple({
-        name: "Aman Tiwari",
-        email,
-        role: "user",
-      userImage:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSL_rJQS-xaUvygvCxc4O5PzNkG_oOqQsdSew&s",
-      // ...user,
-    });
+const AuthContextWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { login: apiLogin, register: apiRegister, logout: apiLogout, me } =
+    useAuthService();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userPrinciple, setUserPrinciple] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Restore the session on first mount from the httpOnly cookie.
+  useEffect(() => {
+    let active = true;
+    me()
+      .then((user) => {
+        if (!active) return;
+        if (user) {
+          setUserPrinciple(withAvatar(user));
+          setIsLoggedIn(true);
+        }
+      })
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+    // run once on mount; service fns are stable for our purposes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const user = await apiLogin({ email, password });
+    setUserPrinciple(withAvatar(user));
     setIsLoggedIn(true);
     return true;
   };
 
-  const logout: () => void = () => {
+  const register = async (input: RegisterInput) => {
+    await apiRegister(input);
+    return true;
+  };
+
+  const logout = async () => {
+    await apiLogout();
     setIsLoggedIn(false);
     setUserPrinciple(null);
   };
 
   return (
-    <AuthContext.Provider value={{ login, logout, isLoggedIn, userPrinciple }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, userPrinciple, loading, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

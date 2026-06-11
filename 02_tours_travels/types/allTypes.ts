@@ -1,9 +1,29 @@
+// Canonical client-facing user (no password). Single source of truth — the
+// previous global ambient `User` in global.d.ts has been removed.
+type User = {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  userImage?: string;
+};
+
+type RegisterInput = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+};
+
 type AuthContextType = {
   isLoggedIn: boolean;
   userPrinciple: User | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  register: (input: RegisterInput) => Promise<boolean>;
+  logout: () => Promise<void>;
 };
+
 type Destination = {
   _id: string;
   name: string;
@@ -17,12 +37,14 @@ type Destination = {
   price: number;
   description: string;
 };
+
 interface Review {
   userId?: string;
   rating?: number;
   comment?: string;
   createdAt?: Date;
 }
+
 interface TouristPlace {
   _id: string;
 
@@ -36,13 +58,13 @@ interface TouristPlace {
   location: string;
 
   category:
-  | "Historical"
-  | "Wildlife"
-  | "Cultural"
-  | "Urban"
-  | "Romantic"
-  | "Adventure"
-  | "Religious";
+    | "Historical"
+    | "Wildlife"
+    | "Cultural"
+    | "Urban"
+    | "Romantic"
+    | "Adventure"
+    | "Religious";
 
   image: string;
 
@@ -58,10 +80,12 @@ interface TouristPlace {
 
   isActive: boolean;
 }
-type User={
-  name?:string,
-  email?:string,
-  password?:string,
-  userImage?:string
-}
-export type { User,AuthContextType, Destination, Review, TouristPlace };
+
+export type {
+  User,
+  RegisterInput,
+  AuthContextType,
+  Destination,
+  Review,
+  TouristPlace,
+};
